@@ -82,7 +82,7 @@ namespace S3Downloader.AWSS3Service
                 {
                     BucketName = _s3Configuration.BucketName,
                     MaxKeys = maxKeys,
-                    ContinuationToken = response.ContinuationToken
+                    ContinuationToken = response.NextContinuationToken
                 };
 
                 if (response.KeyCount < maxKeys)
