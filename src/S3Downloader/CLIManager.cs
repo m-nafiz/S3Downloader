@@ -25,7 +25,8 @@ namespace S3Downloader
             while (input != "exit")
             {
                 Console.WriteLine("Enter 1 to list S3 objects");
-                Console.WriteLine("Enter 2 to download S3 objects");
+                Console.WriteLine("Enter 2 to download a S3 object");
+                Console.WriteLine("Enter 3 to download full S3 bucket");
                 Console.WriteLine("Enter 'exit' to exit");
 
                 input = Console.ReadLine();
@@ -55,6 +56,11 @@ namespace S3Downloader
                         input = Console.ReadLine();
                         await aws3Service.DownloadFileAsync(input);
                         Console.WriteLine("S3 object downloaded successfully");
+                        break;
+                    case "3":
+                        Console.WriteLine("Starting full S3 bucket download");
+                        await aws3Service.FullS3Download();
+                        Console.WriteLine("Completed full S3 bucket download");
                         break;
                 }
             }

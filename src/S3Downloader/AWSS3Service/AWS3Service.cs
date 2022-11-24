@@ -30,7 +30,7 @@ namespace S3Downloader.AWSS3Service
 
         private async Task<bool> TestBucketConnection(S3Configuration configuration)
         {
-            IAmazonS3 amazonS3 = new AmazonS3Client(configuration.AWSAccessKey, configuration.AWSSecretKey, configuration.RegionEndpoint);
+            IAmazonS3 amazonS3 = new AmazonS3Client(configuration.AWSAccessKey, configuration.AWSSecretKey, RegionEndpoint.GetBySystemName(configuration.RegionEndpoint));
             var bucketExists = await amazonS3.DoesS3BucketExistAsync(configuration.BucketName);
             amazonS3.Dispose();
             return bucketExists;
@@ -54,6 +54,41 @@ namespace S3Downloader.AWSS3Service
                 var cancelSource = new CancellationTokenSource();
                 var fullPath = string.Format("{0}\\{1}", _absolutePath, fileKey);
                 await obj.WriteResponseStreamToFileAsync(fullPath, false, cancelSource.Token);
+            }
+        }
+
+        public async Task FullS3Download()
+        {
+            string continuationToken = null;
+            int maxKeys = 10;
+            ListObjectsV2Request request = new ListObjectsV2Request
+            {
+                BucketName = _s3Configuration.BucketName,
+                MaxKeys = maxKeys,
+                ContinuationToken = continuationToken
+            };
+
+            while (true)
+            {
+                ListObjectsV2Response response = await _amazonS3.ListObjectsV2Async(request);
+
+                foreach (var s3Object in response.S3Objects)
+                {
+                    await DownloadFileAsync(s3Object.Key);
+                    Console.WriteLine("Downloaded: " + s3Object.Key);
+                }
+
+                request = new ListObjectsV2Request
+                {
+                    BucketName = _s3Configuration.BucketName,
+                    MaxKeys = maxKeys,
+                    ContinuationToken = response.ContinuationToken
+                };
+
+                if (response.KeyCount < maxKeys)
+                {
+                    break;
+                }
             }
         }
 
