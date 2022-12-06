@@ -10,6 +10,7 @@ namespace S3Downloader.AWSS3Service
     {
         bool SetDownloadLocation(string absolutePath);
         Task<bool> InitS3Client(S3Configuration configuration);
+        Task<bool> UploadFilesAsync(string absolutePath);
         Task DownloadFileAsync(string file);
         Task FullS3Download();
         Task<string> ListObjectsV2Async(string continuationToken);

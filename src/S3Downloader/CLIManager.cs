@@ -27,6 +27,7 @@ namespace S3Downloader
                 Console.WriteLine("Enter 1 to list S3 objects");
                 Console.WriteLine("Enter 2 to download a S3 object");
                 Console.WriteLine("Enter 3 to download full S3 bucket");
+                Console.WriteLine("Enter 4 to upload files S3 bucket");
                 Console.WriteLine("Enter 'exit' to exit");
 
                 input = Console.ReadLine();
@@ -61,6 +62,18 @@ namespace S3Downloader
                         Console.WriteLine("Starting full S3 bucket download");
                         await aws3Service.FullS3Download();
                         Console.WriteLine("Completed full S3 bucket download");
+                        break;
+                    case "4":
+                        Console.WriteLine("Please enter your file/folder location to upload (provide absolute path)");
+                        string absolutePath = Console.ReadLine();
+                        Console.WriteLine("Initiating upload process");
+
+                        var uploaded = await aws3Service.UploadFilesAsync(absolutePath);
+                        
+                        if (uploaded) 
+                            Console.WriteLine("Upload completed");
+                        else
+                            Console.WriteLine("Could not complete the upload");
                         break;
                 }
             }

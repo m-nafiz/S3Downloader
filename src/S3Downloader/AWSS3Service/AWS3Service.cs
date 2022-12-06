@@ -8,6 +8,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.S3.Transfer;
+using static System.Net.WebRequestMethods;
+using System.Net.Sockets;
+using File = System.IO.File;
 
 namespace S3Downloader.AWSS3Service
 {
@@ -39,7 +43,7 @@ namespace S3Downloader.AWSS3Service
         public bool SetDownloadLocation(string absolutePath)
         {
             bool isSet = false;
-            if (IsDirectoryWritable(absolutePath))
+            if (DirectoryExists(absolutePath))
             {
                 _absolutePath = absolutePath;
                 isSet = true;
@@ -92,6 +96,26 @@ namespace S3Downloader.AWSS3Service
             }
         }
 
+        public async Task<bool> UploadFilesAsync(string absolutePath)
+        {
+            var transferUtility = new TransferUtility(_amazonS3);
+            bool isUploaded = true;
+            if (FileExists(absolutePath))
+            {
+                await transferUtility.UploadAsync(absolutePath, _s3Configuration.BucketName);
+            }
+            else if (DirectoryExists(absolutePath))
+            {
+                await transferUtility.UploadDirectoryAsync(absolutePath, _s3Configuration.BucketName, "*.*", SearchOption.AllDirectories);
+                transferUtility.AbortMultipartUploads(_s3Configuration.BucketName, DateTime.UtcNow);
+            }
+            else
+            {
+                isUploaded = false;
+            }
+            return isUploaded;
+        }
+
         public async Task<string> ListObjectsV2Async(string continuationToken)
         {
             ListObjectsV2Request request = new ListObjectsV2Request
@@ -122,19 +146,26 @@ namespace S3Downloader.AWSS3Service
             return isValid;
         }
 
-        private bool IsDirectoryWritable(string dirPath)
+        private bool DirectoryExists(string dirPath)
         {
             return Directory.Exists(dirPath);
-            //try
-            //{
-            //    using (FileStream fs = File.Create(Path.Combine(dirPath, Path.GetRandomFileName()), 1, FileOptions.DeleteOnClose))
-            //    { }
-            //    return true;
-            //}
-            //catch
-            //{
-            //    return false;
-            //}
+        }
+
+        private bool FileExists(string filePath)
+        {
+            return File.Exists(filePath);
+        }
+
+        private bool IsDirectory(string absolutePath)
+        {
+            bool isDirectory = false;
+            FileAttributes attr = File.GetAttributes(absolutePath);
+
+            if (attr.HasFlag(FileAttributes.Directory))
+            {
+                isDirectory = true;
+            }
+            return isDirectory;
         }
     }
 }
